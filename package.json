@@ -1,0 +1,26 @@
+{
+  "name": "express_js",
+  "version": "1.0.0",
+  "description": "ExpressJS App",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaxYashch/EXPRESS_JS.git"
+  },
+  "keywords": [
+    "ExpressJS",
+    "Node",
+    "Typescript"
+  ],
+  "author": "MaxYashch",
+  "license": "ISC",
+  "homepage": "https://github.com/MaxYashch/EXPRESS_JS#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}

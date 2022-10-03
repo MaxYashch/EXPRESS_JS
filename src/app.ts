@@ -1,28 +1,39 @@
 import express, { Express } from 'express';
 import { Server } from 'http';
-import { userRouter } from './users/users';
-import { LoggerService } from './logger/logger_service';
+import { inject, injectable } from 'inversify';
+import { ExeptionFilter } from './errors/exeption_filter';
+import { ILogger } from './logger/logger_interface';
+import { TYPES } from './types';
+import { UserController } from './users/users_controller';
+import 'reflect-metadata';
 
+@injectable()
 export class App {
     app: Express;
     server: Server;
     port: number;
-    logger: LoggerService;
 
-    constructor(logger: LoggerService) {
+    constructor(
+        @inject(TYPES.ILogger) private logger: ILogger,
+        @inject(TYPES.UserController) private userController: UserController,
+        @inject(TYPES.ExeptionFilter) private exeptionFilter: ExeptionFilter,
+        ) {
         this.app = express();
         this.port = 8000;
-        this.logger = logger;
     }
 
     useRoutes() {
-        this.app.use('/users', userRouter)
+        this.app.use('/users', this.userController.router);
+    }
+
+    useExeptionFilters() {
+        this.app.use(this.exeptionFilter.catch.bind(this.exeptionFilter));
     }
 
     public async init() {
         this.useRoutes();
+        this.useExeptionFilters();
         this.server = this.app.listen(this.port);
-        this.logger.log(`Server has established on http://localhost:${this.port}`);
-        
+        this.logger.log(`Server has established on http://localhost:${this.port}`);        
     }
 }

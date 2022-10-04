@@ -6,6 +6,8 @@ import { ILogger } from '../logger/logger_interface';
 import { TYPES } from '../types';
 import 'reflect-metadata';
 import { IUserController } from './users_controller_interface';
+import { UserLoginDto } from './dto/user_login_dto';
+import { UserRegisterDto } from './dto/user_register_dto';
 
 @injectable()
 export class UserController extends BaseController implements IUserController {
@@ -17,12 +19,11 @@ export class UserController extends BaseController implements IUserController {
 		]);
 	}
 
-	login(req: Request, res: Response, next: NextFunction): void {
-		console.log('ds');
+	login(req: Request<{}, {}, UserLoginDto>, res: Response, next: NextFunction): void {
 		next(new HTTPError(401, 'Autorization Error', 'login'));
 	}
 
-	register(req: Request, res: Response, next: NextFunction): void {
+	register(req: Request<{}, {}, UserRegisterDto>, res: Response, next: NextFunction): void {
 		this.ok(res, 'register');
 	}
 }

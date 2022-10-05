@@ -9,6 +9,8 @@ import { IConfigService } from './config/config_service_interface';
 import { IExeptionFilter } from './errors/exeption_filter_interface';
 import { UserController } from './users/users_controller';
 import { PrismaService } from './database/prisma_service';
+import { UsersRepository } from './users/users_repository';
+import { IUsersRepository } from './users/users_repository_interface';
 
 @injectable()
 export class App {
@@ -22,6 +24,7 @@ export class App {
 		@inject(TYPES.ExeptionFilter) private exeptionFilter: IExeptionFilter,
 		@inject(TYPES.ConfigService) private configService: IConfigService,
 		@inject(TYPES.PrismaService) private prismaService: PrismaService,
+		@inject(TYPES.UsersRepository) private UsersRepository: IUsersRepository,
 	) {
 		this.app = express();
 		this.port = 8000;

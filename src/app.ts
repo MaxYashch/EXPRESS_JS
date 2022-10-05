@@ -6,9 +6,9 @@ import { TYPES } from './types';
 import { json } from 'body-parser';
 import 'reflect-metadata';
 import { IConfigService } from './config/config_service_interface';
-import { IUserController } from './users/users_controller_interface';
 import { IExeptionFilter } from './errors/exeption_filter_interface';
 import { UserController } from './users/users_controller';
+import { PrismaService } from './database/prisma_service';
 
 @injectable()
 export class App {
@@ -21,6 +21,7 @@ export class App {
 		@inject(TYPES.UserController) private userController: UserController,
 		@inject(TYPES.ExeptionFilter) private exeptionFilter: IExeptionFilter,
 		@inject(TYPES.ConfigService) private configService: IConfigService,
+		@inject(TYPES.PrismaService) private prismaService: PrismaService,
 	) {
 		this.app = express();
 		this.port = 8000;
@@ -42,6 +43,7 @@ export class App {
 		this.useMiddleware();
 		this.useRoutes();
 		this.useExeptionFilters();
+		await this.prismaService.connect();
 		this.server = this.app.listen(this.port);
 		this.logger.log(`Server has established on http://localhost:${this.port}`);
 	}

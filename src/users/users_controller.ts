@@ -1,22 +1,26 @@
-import { Request, Response, NextFunction } from 'express';
-import { inject, injectable } from 'inversify';
+import { NextFunction, Request, Response } from 'express';
+import { injectable, inject } from 'inversify';
 import { BaseController } from '../common/base_controller';
-import { HTTPError } from '../errors/http_error';
-import { ILogger } from '../logger/logger_interface';
 import { TYPES } from '../types';
 import 'reflect-metadata';
-import { IUserController } from './users_controller_interface';
+import { sign } from 'jsonwebtoken';
+import { ValidateMiddleware } from '../common/validate_middleware';
+import { HTTPError } from '../errors/http_error';
+import { ILogger } from '../logger/logger_interface';
 import { UserLoginDto } from './dto/user_login_dto';
 import { UserRegisterDto } from './dto/user_register_dto';
-import { User } from './user_entity';
+import { IUserController } from './users_controller_interface';
 import { UserService } from './users_service';
-import { ValidateMiddleware } from './../common/validate_middleware';
+import { IConfigService } from '../config/config_service_interface';
+import { IUserService } from './users_service_interface';
+import { AuthGuard } from '../common/auth_guard';
 
 @injectable()
 export class UserController extends BaseController implements IUserController {
 	constructor(
 		@inject(TYPES.ILogger) private loggerService: ILogger,
-		@inject(TYPES.UserService) private userService: UserService,
+		@inject(TYPES.UserService) private userService: IUserService,
+		@inject(TYPES.ConfigService) private configService: IConfigService,
 	) {
 		super(loggerService);
 		this.bindRoutes([
@@ -32,6 +36,12 @@ export class UserController extends BaseController implements IUserController {
 				func: this.login,
 				middlewares: [new ValidateMiddleware(UserLoginDto)],
 			},
+			{
+				path: '/info',
+				method: 'get',
+				func: this.info,
+				middlewares: [new AuthGuard()],
+			},
 		]);
 	}
 
@@ -44,7 +54,8 @@ export class UserController extends BaseController implements IUserController {
 		if (!result) {
 			return next(new HTTPError(401, 'ошибка авторизации', 'login'));
 		}
-		this.ok(res, {});
+		const jwt = await this.signJWT(req.body.email, this.configService.get('SECRET'));
+		this.ok(res, { jwt });
 	}
 
 	async register(
@@ -57,5 +68,31 @@ export class UserController extends BaseController implements IUserController {
 			return next(new HTTPError(422, 'The user already exists'));
 		}
 		this.ok(res, { email: result.email, id: result.id });
+	}
+
+	async info({ user }: Request, res: Response, next: NextFunction): Promise<void> {
+		const userInfo = await this.userService.getUserInfo(user);
+		this.ok(res, { email: userInfo?.email, id: userInfo?.id });
+	}
+
+	private signJWT(email: string, secret: string): Promise<string> {
+		return new Promise<string>((resolve, reject) => {
+			sign(
+				{
+					email,
+					iat: Math.floor(Date.now() / 1000),
+				},
+				secret,
+				{
+					algorithm: 'HS256',
+				},
+				(err, token) => {
+					if (err) {
+						reject(err);
+					}
+					resolve(token as string);
+				},
+			);
+		});
 	}
 }

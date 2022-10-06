@@ -11,6 +11,7 @@ import { UserController } from './users/users_controller';
 import { PrismaService } from './database/prisma_service';
 import { UsersRepository } from './users/users_repository';
 import { IUsersRepository } from './users/users_repository_interface';
+import { AuthMiddleware } from './common/auth_widdleware';
 
 @injectable()
 export class App {
@@ -32,6 +33,8 @@ export class App {
 
 	useMiddleware(): void {
 		this.app.use(json());
+		const authMiddleware = new AuthMiddleware(this.configService.get('SECRET'));
+		this.app.use(authMiddleware.execute.bind(authMiddleware));
 	}
 
 	useRoutes(): void {
